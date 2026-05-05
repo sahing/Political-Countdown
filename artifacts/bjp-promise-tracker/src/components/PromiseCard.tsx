@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { MessageCircle, ChevronDown, ChevronUp, Trash2, Send, ThumbsUp, ThumbsDown, Minus } from "lucide-react";
-import { BJPPromise, STATUS_CONFIG, PromiseStatus } from "@/data/promises";
-import { useComments, Comment } from "@/hooks/useComments";
+import { MessageCircle, ChevronDown, ChevronUp, Trash2, Send, ThumbsUp, ThumbsDown, Minus, Loader2 } from "lucide-react";
+import { BJPPromise, STATUS_CONFIG } from "@/data/promises";
+import { useComments, type Comment } from "@/hooks/useComments";
 
 interface PromiseCardProps {
   promise: BJPPromise;
@@ -35,13 +35,13 @@ export function PromiseCard({ promise }: PromiseCardProps) {
   const [authorInput, setAuthorInput] = useState("");
   const [commentInput, setCommentInput] = useState("");
   const [sentiment, setSentiment] = useState<Comment["sentiment"]>("neutral");
-  const { comments, addComment, deleteComment } = useComments(promise.id);
+  const { comments, isLoading, addComment, deleteComment, isPosting } = useComments(promise.id);
 
   const statusCfg = STATUS_CONFIG[promise.status];
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!commentInput.trim()) return;
+    if (!commentInput.trim() || isPosting) return;
     addComment(authorInput, commentInput, sentiment);
     setCommentInput("");
     setAuthorInput("");
@@ -92,7 +92,11 @@ export function PromiseCard({ promise }: PromiseCardProps) {
         >
           <span className="flex items-center gap-2">
             <MessageCircle className="w-4 h-4" />
-            {comments.length > 0 ? `${comments.length} Comment${comments.length !== 1 ? "s" : ""}` : "Add Comment"}
+            {isLoading
+              ? "Loading comments..."
+              : comments.length > 0
+              ? `${comments.length} Comment${comments.length !== 1 ? "s" : ""}`
+              : "Add Comment"}
           </span>
           {showComments ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
@@ -139,21 +143,30 @@ export function PromiseCard({ promise }: PromiseCardProps) {
                 <button
                   type="submit"
                   data-testid={`submit-comment-${promise.id}`}
-                  disabled={!commentInput.trim()}
+                  disabled={!commentInput.trim() || isPosting}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                 >
-                  <Send className="w-3 h-3" />
-                  Post
+                  {isPosting ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Send className="w-3 h-3" />
+                  )}
+                  {isPosting ? "Posting..." : "Post"}
                 </button>
               </div>
             </form>
 
-            {comments.length > 0 && (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                <span className="text-sm">Loading comments...</span>
+              </div>
+            ) : comments.length > 0 ? (
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {comments.map((comment) => (
                   <div
-                    key={comment.id}
-                    data-testid={`comment-${comment.id}`}
+                    key={comment._id}
+                    data-testid={`comment-${comment._id}`}
                     className="group relative bg-muted/50 rounded-xl px-3 py-2.5"
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -164,10 +177,10 @@ export function PromiseCard({ promise }: PromiseCardProps) {
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">{timeAgo(comment.timestamp)}</span>
+                        <span className="text-xs text-muted-foreground">{timeAgo(comment.createdAt)}</span>
                         <button
-                          data-testid={`delete-comment-${comment.id}`}
-                          onClick={() => deleteComment(comment.id)}
+                          data-testid={`delete-comment-${comment._id}`}
+                          onClick={() => deleteComment(comment._id)}
                           className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
                           title="Delete comment"
                         >
@@ -179,6 +192,8 @@ export function PromiseCard({ promise }: PromiseCardProps) {
                   </div>
                 ))}
               </div>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground py-2">No comments yet. Be the first!</p>
             )}
           </div>
         )}
