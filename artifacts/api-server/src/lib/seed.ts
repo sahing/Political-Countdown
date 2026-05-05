@@ -1,21 +1,9 @@
-export type PromiseStatus = "pending" | "partial" | "fulfilled" | "broken";
+import { Promise as PromiseModel } from "../models/Promise";
+import { logger } from "./logger";
 
-export interface BJPPromise {
-  id: string;
-  icon: string;
-  titleBengali: string;
-  titleEnglish: string;
-  descriptionBengali: string;
-  descriptionEnglish: string;
-  amount: string;
-  category: "financial" | "housing" | "health" | "employment" | "women" | "youth" | "elderly";
-  status: PromiseStatus;
-  color: string;
-}
-
-export const BJP_PROMISES: BJPPromise[] = [
+const SEED_PROMISES = [
   {
-    id: "food-allowance",
+    slug: "food-allowance",
     icon: "🍚",
     titleBengali: "অন্ন সহায়তা ভাতা",
     titleEnglish: "Food Assistance Allowance",
@@ -25,9 +13,10 @@ export const BJP_PROMISES: BJPPromise[] = [
     category: "financial",
     status: "pending",
     color: "from-red-500 to-orange-500",
+    order: 0,
   },
   {
-    id: "youth-unemployment",
+    slug: "youth-unemployment",
     icon: "🎓",
     titleBengali: "বেকার যুবক ভাতা",
     titleEnglish: "Youth Unemployment Allowance",
@@ -37,9 +26,10 @@ export const BJP_PROMISES: BJPPromise[] = [
     category: "youth",
     status: "pending",
     color: "from-blue-500 to-indigo-600",
+    order: 1,
   },
   {
-    id: "pm-awas-housing",
+    slug: "pm-awas-housing",
     icon: "🏠",
     titleBengali: "প্রধানমন্ত্রী আবাস প্রকল্প",
     titleEnglish: "PM Awas Housing Scheme",
@@ -49,9 +39,10 @@ export const BJP_PROMISES: BJPPromise[] = [
     category: "housing",
     status: "pending",
     color: "from-green-500 to-emerald-600",
+    order: 2,
   },
   {
-    id: "pregnant-women",
+    slug: "pregnant-women",
     icon: "🤰",
     titleBengali: "গর্ভবতী মহিলা সহায়তা",
     titleEnglish: "Pregnant Women Financial Aid",
@@ -61,9 +52,10 @@ export const BJP_PROMISES: BJPPromise[] = [
     category: "women",
     status: "pending",
     color: "from-purple-500 to-pink-500",
+    order: 3,
   },
   {
-    id: "free-electricity",
+    slug: "free-electricity",
     icon: "💡",
     titleBengali: "বিনামূল্যে বিদ্যুৎ",
     titleEnglish: "Free Electricity",
@@ -73,9 +65,10 @@ export const BJP_PROMISES: BJPPromise[] = [
     category: "financial",
     status: "pending",
     color: "from-yellow-500 to-amber-500",
+    order: 4,
   },
   {
-    id: "women-free-bus",
+    slug: "women-free-bus",
     icon: "🚌",
     titleBengali: "মহিলাদের বিনামূল্যে বাস যাতায়াত",
     titleEnglish: "Free Bus Travel for Women",
@@ -85,9 +78,10 @@ export const BJP_PROMISES: BJPPromise[] = [
     category: "women",
     status: "pending",
     color: "from-pink-500 to-rose-500",
+    order: 5,
   },
   {
-    id: "elderly-widow-allowance",
+    slug: "elderly-widow-allowance",
     icon: "👴",
     titleBengali: "বয়স্ক ও বিধবা ভাতা বৃদ্ধি",
     titleEnglish: "Elderly & Widow Allowance Increase",
@@ -97,9 +91,10 @@ export const BJP_PROMISES: BJPPromise[] = [
     category: "elderly",
     status: "pending",
     color: "from-orange-500 to-amber-600",
+    order: 6,
   },
   {
-    id: "job-exam-grant",
+    slug: "job-exam-grant",
     icon: "📋",
     titleBengali: "চাকরির পরীক্ষার প্রস্তুতি অনুদান",
     titleEnglish: "Job Exam Preparation Grant",
@@ -109,21 +104,23 @@ export const BJP_PROMISES: BJPPromise[] = [
     category: "youth",
     status: "pending",
     color: "from-teal-500 to-cyan-600",
+    order: 7,
   },
   {
-    id: "health-coverage",
+    slug: "health-coverage",
     icon: "🛡️",
     titleBengali: "স্বাস্থ্য বীমা কভারেজ",
     titleEnglish: "Health Insurance Coverage",
-    descriptionBengali: "প্রতিটি পরিবারের জন্য স্বাস্থ্য পরিষেবায় ₹৫ লক্ষ পর্যন্ত কভারেজ",
+    descriptionBengali: "প্রতিটি পরিবারের জন্য স্বাস্থ্য পরিষেবায় ₹৵ লক্ষ পর্যন্ত কভারেজ",
     descriptionEnglish: "Up to ₹5 lakh health coverage for every family",
     amount: "₹5 Lakh Coverage",
     category: "health",
     status: "pending",
     color: "from-green-600 to-teal-600",
+    order: 8,
   },
   {
-    id: "employment-days",
+    slug: "employment-days",
     icon: "⛏️",
     titleBengali: "কর্মসংস্থান দিন বৃদ্ধি",
     titleEnglish: "Employment Days Increase",
@@ -132,37 +129,15 @@ export const BJP_PROMISES: BJPPromise[] = [
     amount: "100 → 125 Days",
     category: "employment",
     status: "pending",
-    color: "from-brown-500 to-amber-700",
+    color: "from-amber-600 to-yellow-600",
+    order: 9,
   },
 ];
 
-export const STATUS_CONFIG: Record<PromiseStatus, { label: string; bengali: string; color: string; bg: string; border: string }> = {
-  pending: {
-    label: "Pending",
-    bengali: "অপেক্ষমাণ",
-    color: "text-amber-700",
-    bg: "bg-amber-100",
-    border: "border-amber-300",
-  },
-  partial: {
-    label: "Partially Done",
-    bengali: "আংশিক পূরণ",
-    color: "text-blue-700",
-    bg: "bg-blue-100",
-    border: "border-blue-300",
-  },
-  fulfilled: {
-    label: "Fulfilled",
-    bengali: "পূরণ হয়েছে ✓",
-    color: "text-green-700",
-    bg: "bg-green-100",
-    border: "border-green-300",
-  },
-  broken: {
-    label: "Broken",
-    bengali: "ভঙ্গ হয়েছে",
-    color: "text-red-700",
-    bg: "bg-red-100",
-    border: "border-red-300",
-  },
-};
+export async function seedPromises() {
+  const count = await PromiseModel.countDocuments();
+  if (count === 0) {
+    await PromiseModel.insertMany(SEED_PROMISES);
+    logger.info({ count: SEED_PROMISES.length }, "Seeded promises to MongoDB");
+  }
+}

@@ -4,6 +4,7 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { connectMongoDB } from "./lib/mongodb";
+import { seedPromises } from "./lib/seed";
 
 const app: Express = express();
 
@@ -12,16 +13,10 @@ app.use(
     logger,
     serializers: {
       req(req) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url?.split("?")[0],
-        };
+        return { id: req.id, method: req.method, url: req.url?.split("?")[0] };
       },
       res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
+        return { statusCode: res.statusCode };
       },
     },
   }),
@@ -32,8 +27,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
-connectMongoDB().catch((err) => {
-  logger.error({ err }, "MongoDB connection failed — server still running");
-});
+connectMongoDB()
+  .then(() => seedPromises())
+  .catch((err) => {
+    logger.error({ err }, "MongoDB connection failed — server still running");
+  });
 
 export default app;

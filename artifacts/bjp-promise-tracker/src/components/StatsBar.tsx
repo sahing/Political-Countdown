@@ -1,8 +1,9 @@
-import { BJPPromise, STATUS_CONFIG, PromiseStatus } from "@/data/promises";
+import { STATUS_CONFIG, type PromiseStatus } from "@/data/promises";
+import type { PromiseItem } from "@/hooks/usePromises";
 import { CheckCircle2, Clock, AlertTriangle, XCircle } from "lucide-react";
 
 interface StatsBarProps {
-  promises: BJPPromise[];
+  promises: PromiseItem[];
 }
 
 const ICONS: Record<PromiseStatus, React.ReactNode> = {
@@ -45,7 +46,7 @@ export function StatsBar({ promises }: StatsBarProps) {
         ))}
       </div>
 
-      <div className="flex items-center gap-3 mb-2">
+      <div className="flex items-center gap-3">
         <div className="bg-muted rounded-xl px-3 py-2.5 flex items-center gap-2 shrink-0">
           <span className="text-lg font-black text-foreground leading-none">{total}</span>
           <span className="text-xs text-muted-foreground font-medium">Total</span>
