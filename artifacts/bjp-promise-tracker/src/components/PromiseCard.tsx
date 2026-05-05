@@ -1,0 +1,188 @@
+import { useState } from "react";
+import { MessageCircle, ChevronDown, ChevronUp, Trash2, Send, ThumbsUp, ThumbsDown, Minus } from "lucide-react";
+import { BJPPromise, STATUS_CONFIG, PromiseStatus } from "@/data/promises";
+import { useComments, Comment } from "@/hooks/useComments";
+
+interface PromiseCardProps {
+  promise: BJPPromise;
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+const SENTIMENT_ICONS = {
+  positive: <ThumbsUp className="w-3.5 h-3.5" />,
+  negative: <ThumbsDown className="w-3.5 h-3.5" />,
+  neutral: <Minus className="w-3.5 h-3.5" />,
+};
+
+const SENTIMENT_COLORS: Record<Comment["sentiment"], string> = {
+  positive: "text-green-600 bg-green-50 border-green-200",
+  negative: "text-red-600 bg-red-50 border-red-200",
+  neutral: "text-gray-600 bg-gray-50 border-gray-200",
+};
+
+export function PromiseCard({ promise }: PromiseCardProps) {
+  const [showComments, setShowComments] = useState(false);
+  const [authorInput, setAuthorInput] = useState("");
+  const [commentInput, setCommentInput] = useState("");
+  const [sentiment, setSentiment] = useState<Comment["sentiment"]>("neutral");
+  const { comments, addComment, deleteComment } = useComments(promise.id);
+
+  const statusCfg = STATUS_CONFIG[promise.status];
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!commentInput.trim()) return;
+    addComment(authorInput, commentInput, sentiment);
+    setCommentInput("");
+    setAuthorInput("");
+    setSentiment("neutral");
+  }
+
+  return (
+    <div
+      data-testid={`card-promise-${promise.id}`}
+      className="bg-card border border-card-border rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
+    >
+      <div className={`h-1.5 w-full bg-gradient-to-r ${promise.color}`} />
+
+      <div className="p-5 flex-1">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl" role="img" aria-label={promise.titleEnglish}>
+              {promise.icon}
+            </span>
+            <div>
+              <h3 className="font-bold text-base leading-tight text-foreground">
+                {promise.titleBengali}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{promise.titleEnglish}</p>
+            </div>
+          </div>
+          <span
+            data-testid={`status-${promise.id}`}
+            className={`shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${statusCfg.color} ${statusCfg.bg} ${statusCfg.border}`}
+          >
+            {statusCfg.label}
+          </span>
+        </div>
+
+        <div className={`inline-flex items-center px-3 py-1.5 rounded-lg bg-gradient-to-r ${promise.color} text-white text-sm font-bold mb-3`}>
+          {promise.amount}
+        </div>
+
+        <p className="text-sm text-foreground/80 mb-1 leading-relaxed">{promise.descriptionBengali}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">{promise.descriptionEnglish}</p>
+      </div>
+
+      <div className="border-t border-border">
+        <button
+          data-testid={`toggle-comments-${promise.id}`}
+          onClick={() => setShowComments((v) => !v)}
+          className="w-full flex items-center justify-between px-5 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+        >
+          <span className="flex items-center gap-2">
+            <MessageCircle className="w-4 h-4" />
+            {comments.length > 0 ? `${comments.length} Comment${comments.length !== 1 ? "s" : ""}` : "Add Comment"}
+          </span>
+          {showComments ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+
+        {showComments && (
+          <div className="px-5 pb-5 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-2">
+              <input
+                data-testid={`input-author-${promise.id}`}
+                type="text"
+                placeholder="Your name (optional)"
+                value={authorInput}
+                onChange={(e) => setAuthorInput(e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+              <textarea
+                data-testid={`input-comment-${promise.id}`}
+                placeholder="Share your thoughts on this promise..."
+                value={commentInput}
+                onChange={(e) => setCommentInput(e.target.value)}
+                rows={2}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+              />
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">Sentiment:</span>
+                  {(["positive", "neutral", "negative"] as const).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      data-testid={`sentiment-${s}-${promise.id}`}
+                      onClick={() => setSentiment(s)}
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs border transition-all ${
+                        sentiment === s
+                          ? SENTIMENT_COLORS[s] + " font-semibold"
+                          : "text-muted-foreground bg-background border-border hover:bg-accent"
+                      }`}
+                    >
+                      {SENTIMENT_ICONS[s]}
+                      <span className="capitalize">{s}</span>
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="submit"
+                  data-testid={`submit-comment-${promise.id}`}
+                  disabled={!commentInput.trim()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                >
+                  <Send className="w-3 h-3" />
+                  Post
+                </button>
+              </div>
+            </form>
+
+            {comments.length > 0 && (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    data-testid={`comment-${comment.id}`}
+                    className="group relative bg-muted/50 rounded-xl px-3 py-2.5"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">{comment.author}</span>
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs border ${SENTIMENT_COLORS[comment.sentiment]}`}>
+                          {SENTIMENT_ICONS[comment.sentiment]}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{timeAgo(comment.timestamp)}</span>
+                        <button
+                          data-testid={`delete-comment-${comment.id}`}
+                          onClick={() => deleteComment(comment.id)}
+                          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                          title="Delete comment"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-foreground/80 leading-relaxed">{comment.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
