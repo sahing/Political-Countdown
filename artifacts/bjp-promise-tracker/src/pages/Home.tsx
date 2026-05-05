@@ -91,9 +91,6 @@ export default function Home() {
           <p className="text-xs text-muted-foreground">
             Tracking BJP's key promises made before the 2025 West Bengal elections.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Comments are shared across all visitors via MongoDB.
-          </p>
           <div className="pt-1 flex items-center justify-center gap-3">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <ExternalLink className="w-3 h-3" />
