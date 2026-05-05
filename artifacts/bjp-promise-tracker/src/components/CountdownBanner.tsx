@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Calendar, Clock } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const POWER_DATE = new Date("2025-05-04T00:00:00");
 
@@ -31,9 +32,13 @@ export function CountdownBanner() {
       </div>
 
       <div className="relative px-5 py-7 sm:px-8 sm:py-9">
-        <div className="flex items-center gap-2 mb-2">
-          <Calendar className="w-4 h-4 shrink-0 opacity-80" />
-          <span className="text-xs sm:text-sm font-medium opacity-80">Since May 4, 2025 — Accountability Tracker</span>
+        {/* Top row: date label + theme toggle */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 shrink-0 opacity-80" />
+            <span className="text-xs sm:text-sm font-medium opacity-80">Since May 4, 2025 — Accountability Tracker</span>
+          </div>
+          <ThemeToggle />
         </div>
 
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 tracking-tight leading-tight">
