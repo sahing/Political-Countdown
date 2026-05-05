@@ -39,10 +39,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 py-6 md:py-10 space-y-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8 md:py-10 space-y-4 sm:space-y-5">
 
-        <div className="text-center mb-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-100 text-orange-700 border border-orange-200 rounded-full text-xs font-semibold tracking-wide uppercase mb-3">
+        {/* Top badge */}
+        <div className="text-center">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-100 text-orange-700 border border-orange-200 rounded-full text-xs font-semibold tracking-wide uppercase">
             West Bengal 2025
           </span>
         </div>
@@ -51,20 +52,26 @@ export default function Home() {
 
         <StatsBar promises={BJP_PROMISES} />
 
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-          <FilterBar active={filter} onChange={setFilter} counts={counts} />
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              data-testid="input-search"
-              type="search"
-              placeholder="Search promises..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
-          </div>
+        {/* Search — full width on its own row on mobile */}
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            data-testid="input-search"
+            type="search"
+            placeholder="Search promises..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-input bg-card focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
         </div>
+
+        {/* Filter row — horizontally scrollable on mobile */}
+        <FilterBar active={filter} onChange={setFilter} counts={counts} />
+
+        {/* Results count */}
+        <p className="text-xs text-muted-foreground font-medium">
+          Showing {filtered.length} of {BJP_PROMISES.length} promises
+        </p>
 
         {filtered.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
@@ -73,21 +80,21 @@ export default function Home() {
             <p className="text-sm mt-1">Try adjusting your search or filter</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             {filtered.map((promise) => (
               <PromiseCard key={promise.id} promise={promise} />
             ))}
           </div>
         )}
 
-        <footer className="text-center pt-6 border-t border-border">
-          <p className="text-xs text-muted-foreground mb-1">
+        <footer className="text-center pt-5 border-t border-border space-y-1">
+          <p className="text-xs text-muted-foreground">
             Tracking BJP's 10 key promises made before the 2025 West Bengal elections.
           </p>
           <p className="text-xs text-muted-foreground">
-            Comments are stored locally in your browser. Status is updated based on official announcements.
+            Comments are stored in MongoDB and shared across all visitors.
           </p>
-          <div className="mt-3 flex items-center justify-center gap-1 text-xs text-muted-foreground">
+          <div className="pt-1 flex items-center justify-center gap-1 text-xs text-muted-foreground">
             <ExternalLink className="w-3 h-3" />
             <span>Source: BJP Sankalp Patra 2025</span>
           </div>
